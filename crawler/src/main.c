@@ -106,6 +106,10 @@ static struct toxNodes {
     { NULL, 0, NULL },
 };
 
+#ifdef GOTOXCWL
+extern void dump_node_handler(char*, uint16_t, uint8_t*);
+#endif
+
 /* Attempts to bootstrap to every listed bootstrap node */
 static void bootstrap_tox(Crawler *cwl)
 {
@@ -171,6 +175,12 @@ void cb_getnodes_response(IP_Port *ip_port, const uint8_t *public_key, void *obj
     memcpy(node.public_key, public_key, TOX_PUBLIC_KEY_SIZE);
     memcpy(&cwl->nodes_list[cwl->num_nodes++], &node, sizeof(Node_format));
     cwl->last_new_node = get_time();
+
+    char ip_str[IP_NTOA_LEN];
+    ip_ntoa(&node.ip_port.ip, ip_str, sizeof(ip_str));
+#ifdef GOTOXCWL
+    dump_node_handler(ip_str, node.ip_port.port, node.public_key);
+#endif
 }
 
 /*
@@ -279,7 +289,9 @@ static int crawler_dump_log(Crawler *cwl)
     for (uint32_t i = 0; i < cwl->num_nodes; ++i) {
         char ip_str[IP_NTOA_LEN];
         ip_ntoa(&cwl->nodes_list[i].ip_port.ip, ip_str, sizeof(ip_str));
+#ifndef GOTOXCWL
         fprintf(fp, "%s ", ip_str);
+#endif
     }
     UNLOCK;
 
@@ -412,7 +424,11 @@ static int do_thread_control(void)
     return 0;
 }
 
+#ifdef GOTOXCWL
+int mainccc(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
     if (pthread_mutex_init(&threads.lock, NULL) != 0) {
         fprintf(stderr, "pthread mutex failed to init in main()\n");

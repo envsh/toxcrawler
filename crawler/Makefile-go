@@ -1,0 +1,10 @@
+
+export CGO_CFLAGS=-DGOTOXCWL=1 -I..
+export CGO_LDFLAGS=-L../../../toxcore/build/.libs/ -ltoxcore -lsodium
+
+all:
+	cd src && go build -v -x -o gotoxcwl
+
+clean:
+	rm -f src/toxcwl
+	true
